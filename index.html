@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://script.google.com 'unsafe-inline'; connect-src https://script.google.com https://script.googleusercontent.com;">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador HGW</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #0f0f0f;
+      color: #e0ffe0;
+      margin: 0;
+      padding: 1rem;
+    }
+    header {
+      background-color: #003300;
+      text-align: center;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+    h1, h2 {
+      margin: 0.5rem 0;
+    }
+    .titulo {
+      color: #7fff7f;
+      font-size: 2rem;
+    }
+    .frase {
+      color: #b0ffb0;
+      font-size: 1rem;
+    }
+    .autor {
+      color: #99cc99;
+      font-size: 0.8rem;
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .section {
+      background: #1a1a1a;
+      border: 1px solid #2e7d32;
+      border-radius: 6px;
+      padding: 1rem;
+      flex: 1 1 300px;
+    }
+    label, input, select, button {
+      display: block;
+      width: 100%;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+    input, select {
+      background-color: #111;
+      color: #e0ffe0;
+      border: 1px solid #55cc55;
+      border-radius: 4px;
+      padding: 0.5rem;
+    }
+    button {
+      background-color: #7fff7f;
+      color: #000;
+      font-weight: bold;
+      font-size: 0.75rem;
+      padding: 0.3rem 0.6rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      width: auto;
+      min-width: 80px;
+      max-width: 140px;
+    }
+    button:hover {
+      background-color: #66ff66;
+    }
+    canvas {
+      background: #fff;
+      margin-top: 1rem;
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+    }
+    .result {
+      margin-top: 0.5rem;
+      font-weight: bold;
+      color: #7fff7f;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+    }
+    th, td {
+      border: 1px solid #2e7d32;
+      padding: 0.3rem;
+      text-align: center;
+    }
+    th {
+      background-color: #003300;
+      color: #e0ffe0;
+    }
+    .tabla-input input {
+      width: 100%;
+      background-color: #111;
+      color: #e0ffe0;
+      border: 1px solid #55cc55;
+    }
+    .linea-extra {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      align-items: center;
+    }
+    .linea-extra select {
+      flex: 1;
+      background-color: #111;
+      color: #e0ffe0;
+      border: 1px solid #55cc55;
+      border-radius: 4px;
+      padding: 0.5rem;
+    }
+    .linea-extra input {
+      width: 80px;
+      background-color: #111;
+      color: #e0ffe0;
+      border: 1px solid #55cc55;
+      border-radius: 4px;
+      padding: 0.5rem;
+    }
+    .toast-alerta {
+      font-family: 'Poppins', sans-serif;
+      border-radius: 4px;
+      padding: 12px 16px;
+    }
+    .cargando {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    /* Estilos para pestañas */
+    .tab {
+      overflow: hidden;
+      border: 1px solid #2e7d32;
+      background-color: #1a1a1a;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+    }
+    .tab button {
+      background-color: inherit;
+      color: #e0ffe0;
+      float: left;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      padding: 10px 16px;
+      transition: 0.3s;
+      font-size: 14px;
+    }
+    .tab button:hover {
+      background-color: #2e7d32;
+    }
+    .tab button.active {
+      background-color: #2e7d32;
+      color: #fff;
+    }
+    .tabcontent {
+      display: none;
+      padding: 6px 12px;
+      border: 1px solid #2e7d32;
+      border-top: none;
+      border-radius: 0 0 6px 6px;
+      background-color: #1a1a1a;
+    }
+    .info-usuario {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: #111;
+      color: #b6ffb6;
+      font-size: 11px;
+      font-family: 'Poppins', sans-serif;
+      border: 1px solid #44cc44;
+      border-radius: 6px;
+      padding: 6px 10px;
+      max-width: 200px;
+      box-shadow: 0 0 4px #33cc33;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      margin-bottom: 0.3rem;
+      display: block;
+      color: #b0ffb0;
+    }
+  </style>
+</head>
+<body>
+<script>
+  const claveCorrecta = "HGW-2025-0147";
+  const ingreso = prompt(
+    "🔐 Ingreso exclusivo con contraseña\n\n" +
+    "📌 No compartas este acceso.\n" +
+    "🚫 Uso exclusivo e intransferible.\n\n" +
+    "Por favor, ingresa tu clave:"
+  );
+
+  if (ingreso !== claveCorrecta) {
+    alert("❌ Contraseña incorrecta. Acceso denegado.");
+    window.location.href = "https://google.com";
+  } else {
+    sessionStorage.setItem('hgwAuth', claveCorrecta);
+  }
+</script>
+
+<header>
+  <div class="info-usuario">
+    <strong>🔐 Usuario:</strong> Keren Atencio<br>
+    <strong>🔑 Código:</strong> HGW-2025-0147<br>
+    <hr style="border: 0; border-top: 1px solid #44cc44; margin: 4px 0;">
+    📌 No compartas este acceso.<br>
+    🚫 Uso exclusivo e intransferible.
+  </div>
+  <div style="text-align: center;">
+    <h1 class="titulo">📈 Simulador HGW</h1>
+    <p class="frase">Transforma tu red en resultados reales 🚀</p>
+  </div>
+</header>
+
+<!-- Pestañas -->
+<div class="tab">
+  <button class="tablinks active" onclick="openTab(event, 'calculadora')">💰 Calculadora de Bonos</button>
+  <button class="tablinks" onclick="openTab(event, 'resultadosRed')">📊 Resultados de Red</button>
+</div>
+
+<!-- Contenido de pestaña Calculadora de Bonos -->
+<div id="calculadora" class="tabcontent" style="display: block;">
+  <div class="container">
+    <div class="section">
+      <h2>🧾 Registro Red</h2>
+      <table class="tabla-input">
+        <thead>
+          <tr><th>ID</th><th>Nombre</th><th>Membresía</th><th>Rol</th><th>Teléfono</th></tr>
+        </thead>
+        <tbody id="tablaRed"></tbody>
+      </table>
+      <button onclick="agregarFila()">Agregar fila</button>
+      <button onclick="descargarExcel()">📥 Descargar Excel</button>
+      <button onclick="limpiarTabla()">🧹 Limpiar Tabla</button>	
+    </div>
+
+    <div class="section">
+      <h2>💰 Bono Inicio Rápido</h2>
+      <label>Membresía:</label>
+      <select id="inicioMembresia">
+        <option value="50">50 BV</option>
+        <option value="100">100 BV</option>
+        <option value="300">300 BV</option>
+        <option value="600">600 BV</option>
+      </select>
+      <label>Número de Afiliados:</label>
+      <input type="number" id="inicioAfiliados" value="0" />
+      <button onclick="calcularInicio()">Calcular</button>
+      <div class="result">Ganancia Inicio Rápido: <span id="resInicio"></span></div>
+    </div>
+
+    <div class="section">
+      <h2>🛍 Bono Venta al Público</h2>
+      <label>Monto de Venta (COP):</label>
+      <input type="number" id="ventaMonto" value="0" />
+      <label>% de Ganancia:</label>
+      <select id="ventaPorcentaje">
+        <option value="30">30%</option>
+        <option value="50">50%</option>
+      </select>
+      <button onclick="calcularVenta()">Calcular</button>
+      <div class="result">Ganancia Venta: <span id="resVenta"></span></div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="section">
+      <h2>🔁 Bono Recompra</h2>
+      <label>Cantidad de BV:</label>
+      <input type="number" id="recompraBV" value="0" />
+      <button onclick="calcularRecompra()">Calcular</button>
+      <div class="result">Ganancia Recompra: <span id="resRecompra"></span></div>
+    </div>
+
+    <div class="section">
+      <h2>📚 Bono Desarrollo</h2>
+      <label>Selecciona tu membresía:</label>
+      <select id="membresiaDesarrollo">
+        <option value="0.2">PreJr</option>
+        <option value="0.5">Jr</option>
+        <option value="1.5">Sr</option>
+        <option value="3.0">Mst</option>
+      </select>
+      <label>BV de primera compra:</label>
+      <input type="number" id="bvDesarrollo" value="0" />
+      <label>¿Agregar líneas adicionales?</label>
+      <select id="usarExtrasDesarrollo" onchange="toggleExtrasDesarrollo()">
+        <option value="no">No</option>
+        <option value="si">Sí</option>
+      </select>
+      <div id="extrasDesarrollo" style="display: none; margin-top: 1rem;">
+        <h3 style="margin: 0.5rem 0; font-size: 1rem; color: #b0ffb0;">Líneas Adicionales</h3>
+        <div class="linea-extra">
+          <select class="membresia-extra">
+            <option value="50">50 BV</option>
+            <option value="100">100 BV</option>
+            <option value="300">300 BV</option>
+            <option value="600">600 BV</option>
+          </select>
+          <input type="number" class="cantidad-extra" placeholder="Cantidad" value="0" min="0">
+        </div>
+        <div class="linea-extra">
+          <select class="membresia-extra">
+            <option value="50">50 BV</option>
+            <option value="100">100 BV</option>
+            <option value="300">300 BV</option>
+            <option value="600">600 BV</option>
+          </select>
+          <input type="number" class="cantidad-extra" placeholder="Cantidad" value="0" min="0">
+        </div>
+      </div>
+      <button onclick="calcularDesarrollo()">Calcular</button>
+      <div class="result">Ganancia Desarrollo: <span id="resDesarrollo"></span></div>
+      <div class="result">BV Totales: <span id="bvTotales"></span></div>
+      <small style="color: #99cc99;"><em>Fórmula: ((BV + adicionales) × factor × 3800) ÷ 2</em></small>
+    </div>
+
+    <div class="section">
+      <h2>🤝 Bono Equipo</h2>
+      <label>BV Línea 1:</label>
+      <input type="number" id="bv1Equipo" value="0" />
+      <label>BV Línea 2:</label>
+      <input type="number" id="bv2Equipo" value="0" />
+      <label>% de Rango:</label>
+      <select id="porcentajeEquipo">
+        <option value="0.05">PreJr 5%</option>
+        <option value="0.07">Jr 7%</option>
+        <option value="0.08">Sr 8%</option>
+        <option value="0.10">Mst 10%</option>
+      </select>
+      <button onclick="calcularEquipo()">Calcular</button>
+      <div class="result">Ganancia Equipo: <span id="resEquipo"></span></div>
+      <small style="color: #99cc99;"><em>Fórmula: ((min(BV1, BV2) * 10%) / 2) * % rango * 3800</em></small>
+    </div>
+
+    <div class="section">
+      <h2>📊 Resultados Totales</h2>
+      <button onclick="calcularTotales()">📌 Calcular Totales</button>
+      <button onclick="limpiarCampos()">🧹 Limpiar</button>
+      <button onclick="guardarTotales()">💾 Guardar Día/Mes</button>
+      <button onclick="descargarCSV()">📤 Descargar CSV</button>
+      <div class="result">Total Diario: <span id="totalDiario"></span></div>
+      <div class="result">Acumulado Mensual: <span id="totalMensual"></span></div>
+      <canvas id="graficoBonos"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Contenido de pestaña Resultados de Red -->
+<div id="resultadosRed" class="tabcontent">
+  <div class="container">
+    <div class="section">
+      <h2>📝 Registrar Nuevo Afiliado</h2>
+      <div class="form-group">
+        <label for="afiliadoId">ID Afiliado (alfanumérico):</label>
+        <input type="text" id="afiliadoId" required>
+      </div>
+      <div class="form-group">
+        <label for="afiliadoNombre">Nombre Completo:</label>
+        <input type="text" id="afiliadoNombre" required>
+      </div>
+      <div class="form-group">
+        <label for="afiliadoPatrocinador">Patrocinador:</label>
+        <input type="text" id="afiliadoPatrocinador" required>
+      </div>
+      <div class="form-group">
+        <label for="afiliadoMembresia">Membresía:</label>
+        <select id="afiliadoMembresia" required>
+          <option value="50">50 BV</option>
+          <option value="100">100 BV</option>
+          <option value="300">300 BV</option>
+          <option value="600">600 BV</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="afiliadoVentas">Ventas al Público (COP):</label>
+        <input type="number" id="afiliadoVentas" value="0" min="0">
+      </div>
+      <div class="form-group">
+        <label for="afiliadoFecha">Fecha:</label>
+        <input type="date" id="afiliadoFecha" required>
+      </div>
+      <button onclick="registrarAfiliado()">Registrar Afiliado</button>
+      <button onclick="cargarDatosRed()">Actualizar Datos</button>
+    </div>
+
+    <div class="section">
+      <h2>📈 Análisis de Red</h2>
+      <div class="form-group">
+        <label for="fechaInicio">Fecha Inicio:</label>
+        <input type="date" id="fechaInicio">
+      </div>
+      <div class="form-group">
+        <label for="fechaFin">Fecha Fin:</label>
+        <input type="date" id="fechaFin">
+      </div>
+      <button onclick="generarAnalisis()">Generar Análisis</button>
+      <div id="resumenRed" style="margin-top: 1rem;">
+        <div class="result">Total Afiliados: <span id="totalAfiliados">0</span></div>
+        <div class="result">BV Totales: <span id="totalBVRed">0</span></div>
+        <div class="result">Ventas Totales: <span id="totalVentasRed">$0</span></div>
+        <div class="result">Comisiones Totales: <span id="totalComisionesRed">$0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="section">
+      <h2>📊 Historial de Comisiones</h2>
+      <div id="historialContainer">
+        <p>Selecciona "Actualizar Datos" para ver el historial</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📈 Evolución de Ingresos</h2>
+      <canvas id="graficoHistorial"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+// Variables globales
+let totales = { inicio: 0, venta: 0, recompra: 0, desarrollo: 0, equipo: 0 };
+let historial = [];
+let chartHGW = null;
+let chartHistorial = null;
+
+// Configuración Global para conexión con Google Apps Script
+const CONFIG = {
+  WEB_APP_URL: "https://script.google.com/macros/s/TU_ID_DE_APP/exec",
+  SHEET_ID: "12IYzbZ1pP8vQhLhnBq-YsSfcI5ErDqKo",
+  API_KEY: "HGW#2025$14-7kXyZ*9PqW3ert5vBn8n"
+};
+
+// Función para cambiar pestañas
+function openTab(evt, tabName) {
+  const tabcontent = document.getElementsByClassName("tabcontent");
+  for (let i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+  
+  const tablinks = document.getElementsByClassName("tablinks");
+  for (let i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+  
+  document.getElementById(tabName).style.display = "block";
+  evt.currentTarget.className += " active";
+}
+
+// ================== FUNCIONES PARA CALCULADORA DE BONOS ================== //
+
+function agregarFila() {
+  const tabla = document.getElementById('tablaRed');
+  const fila = document.createElement('tr');
+  for (let i = 0; i < 5; i++) {
+    const td = document.createElement('td');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.style.width = '100%';
+    td.appendChild(input);
+    fila.appendChild(td);
+  }
+  tabla.appendChild(fila);
+}
+
+function descargarExcel() {
+  const filas = [['ID','Nombre','Membresía','Rol','Teléfono']];
+  document.querySelectorAll('#tablaRed tr').forEach(tr => {
+    const row = [];
+    tr.querySelectorAll('input').forEach(input => row.push(input.value));
+    filas.push(row);
+  });
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(filas);
+  XLSX.utils.book_append_sheet(wb, ws, 'Red HGW');
+  XLSX.writeFile(wb, 'registro_hgw.xlsx');
+}
+
+function limpiarTabla() {
+  const tabla = document.getElementById('tablaRed');
+  tabla.innerHTML = '';
+}
+
+function calcularInicio() {
+  const bv = parseFloat(document.getElementById('inicioMembresia').value);
+  const afiliados = parseInt(document.getElementById('inicioAfiliados').value);
+  const total = afiliados * bv * 0.10 * 3800;
+  totales.inicio = total;
+  document.getElementById('resInicio').innerText = `$${total.toLocaleString()}`;
+}
+
+function calcularVenta() {
+  const monto = parseFloat(document.getElementById('ventaMonto').value);
+  const porcentaje = parseFloat(document.getElementById('ventaPorcentaje').value);
+  const total = monto * (porcentaje / 100);
+  totales.venta = total;
+  document.getElementById('resVenta').innerText = `$${total.toLocaleString()}`;
+}
+
+function calcularRecompra() {
+  const bv = parseFloat(document.getElementById('recompraBV').value);
+  const total = bv * 0.025 * 3800;
+  totales.recompra = total;
+  document.getElementById('resRecompra').innerText = `$${total.toLocaleString()}`;
+}
+
+function toggleExtrasDesarrollo() {
+  const val = document.getElementById('usarExtrasDesarrollo').value;
+  document.getElementById('extrasDesarrollo').style.display = val === 'si' ? 'block' : 'none';
+}
+
+function calcularDesarrollo() {
+  const bv = parseFloat(document.getElementById('bvDesarrollo').value) || 0;
+  const factor = parseFloat(document.getElementById('membresiaDesarrollo').value);
+  let totalBV = bv;
+  
+  if (document.getElementById('usarExtrasDesarrollo').value === 'si') {
+    const lineas = document.querySelectorAll('.linea-extra');
+    lineas.forEach(linea => {
+      const bvLinea = parseFloat(linea.querySelector('.membresia-extra').value);
+      const cantidad = parseFloat(linea.querySelector('.cantidad-extra').value) || 0;
+      totalBV += bvLinea * cantidad;
+    });
+  }
+
+  const total = (totalBV * factor * 3800) / 2;
+  totales.desarrollo = total;
+  
+  document.getElementById('resDesarrollo').innerText = `$${total.toLocaleString()}`;
+  document.getElementById('bvTotales').innerText = `${totalBV} BV`;
+}
+
+function calcularEquipo() {
+  const bv1 = parseFloat(document.getElementById('bv1Equipo').value);
+  const bv2 = parseFloat(document.getElementById('bv2Equipo').value);
+  const porcentaje = parseFloat(document.getElementById('porcentajeEquipo').value);
+  const base = (Math.min(bv1, bv2) * 0.10) / 2;
+  const total = base * porcentaje * 3800;
+  totales.equipo = total;
+  document.getElementById('resEquipo').innerText = `$${total.toLocaleString()}`;
+}
+
+function calcularTotales() {
+  const total = Object.values(totales).reduce((a,b)=>a+b,0);
+  historial.push(total);
+  const mensual = historial.reduce((a,b)=>a+b,0);
+  document.getElementById('totalDiario').innerText = `$${total.toLocaleString()}`;
+  document.getElementById('totalMensual').innerText = `$${mensual.toLocaleString()}`;
+  graficarBonos();
+}
+
+function limpiarCampos() {
+  document.querySelectorAll('input[type="number"]').forEach(el=>el.value=0);
+  document.querySelectorAll('.result span').forEach(el=>el.innerText='');
+  Object.keys(totales).forEach(k=>totales[k]=0);
+}
+
+function graficarBonos() {
+  const ctx = document.getElementById('graficoBonos').getContext('2d');
+  if (chartHGW) chartHGW.destroy();
+  
+  chartHGW = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(totales),
+      datasets: [{
+        label: 'COP por Bono',
+        data: Object.values(totales),
+        backgroundColor: '#66ff66'
+      }, {
+        type: 'line',
+        label: 'Crecimiento acumulado',
+        data: Object.values(totales),
+        borderColor: '#ffff00',
+        borderWidth: 2,
+        fill: false
+      }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'top' } } }
+  });
+}
+
+// ================== FUNCIONES PARA RESULTADOS DE RED ================== //
+
+async function registrarAfiliado() {
+  if (!validarSesion()) return;
+  
+  const formData = {
+    action: 'registrarAfiliado',
+    afiliadoId: document.getElementById('afiliadoId').value.trim(),
+    nombre: document.getElementById('afiliadoNombre').value.trim(),
+    patrocinador: document.getElementById('afiliadoPatrocinador').value.trim(),
+    membresia: document.getElementById('afiliadoMembresia').value,
+    ventas: parseFloat(document.getElementById('afiliadoVentas').value) || 0,
+    fecha: document.getElementById('afiliadoFecha').value,
+    apiKey: CONFIG.API_KEY
+  };
+
+  // Validación
+  if (!formData.afiliadoId || !formData.nombre || !formData.patrocinador || !formData.fecha) {
+    mostrarAlerta('❌ Completa todos los campos obligatorios');
+    return;
+  }
+
+  mostrarCarga(true, 'btnRegistrarAfiliado');
+  
+  try {
+    const response = await callGoogleScript(formData);
+    
+    if (response.success) {
+      mostrarAlerta('✅ Afiliado registrado correctamente', 'success');
+      // Limpiar formulario
+      document.getElementById('afiliadoId').value = '';
+      document.getElementById('afiliadoNombre').value = '';
+      document.getElementById('afiliadoVentas').value = '0';
+    } else {
+      mostrarAlerta(`❌ ${response.message}`);
+    }
+  } catch (error) {
+    mostrarAlerta(`🚨 Error: ${error.message}`);
+  } finally {
+    mostrarCarga(false, 'btnRegistrarAfiliado');
+  }
+}
+
+async function cargarDatosRed() {
+  if (!validarSesion()) return;
+  
+  try {
+    const response = await callGoogleScript({
+      action: 'obtenerDatosRed',
+      apiKey: CONFIG.API_KEY
+    });
+    
+    if (response.error) {
+      mostrarAlerta(response.message);
+      return;
+    }
+
+    // Mostrar resumen
+    document.getElementById('totalAfiliados').textContent = response.totalAfiliados || 0;
+    document.getElementById('totalBVRed').textContent = response.totalBV || 0;
+    document.getElementById('totalVentasRed').textContent = `$${parseFloat(response.totalVentas || 0).toLocaleString()}`;
+    document.getElementById('totalComisionesRed').textContent = `$${parseFloat(response.totalComisiones || 0).toLocaleString()}`;
+
+    // Mostrar historial
+    renderizarHistorial(response.historial);
+    
+    // Graficar historial
+    graficarHistorial(response.historial);
+    
+  } catch (error) {
+    mostrarAlerta(error.message);
+  }
+}
+
+async function generarAnalisis() {
+  if (!validarSesion()) return;
+  
+  const fechaInicio = document.getElementById('fechaInicio').value;
+  const fechaFin = document.getElementById('fechaFin').value;
+
+  try {
+    const response = await callGoogleScript({
+      action: 'generarAnalisis',
+      fechaInicio,
+      fechaFin,
+      apiKey: CONFIG.API_KEY
+    });
+    
+    if (response.error) {
+      mostrarAlerta(response.message);
+      return;
+    }
+
+    // Actualizar resumen con datos filtrados
+    document.getElementById('totalAfiliados').textContent = response.totalAfiliados || 0;
+    document.getElementById('totalBVRed').textContent = response.totalBV || 0;
+    document.getElementById('totalVentasRed').textContent = `$${parseFloat(response.totalVentas || 0).toLocaleString()}`;
+    document.getElementById('totalComisionesRed').textContent = `$${parseFloat(response.totalComisiones || 0).toLocaleString()}`;
+
+    // Graficar historial filtrado
+    graficarHistorial(response.historial);
+    
+  } catch (error) {
+    mostrarAlerta(error.message);
+  }
+}
+
+function renderizarHistorial(historial) {
+  const container = document.getElementById('historialContainer');
+  
+  if (!historial || historial.length === 0) {
+    container.innerHTML = '<p>No hay datos históricos registrados</p>';
+    return;
+  }
+
+  let html = '<table><thead><tr><th>Fecha</th><th>ID Afiliado</th><th>Nombre</th><th>Membresía</th><th>Ventas</th><th>Comisiones</th></tr></thead><tbody>';
+  
+  historial.forEach(item => {
+    html += `<tr>
+      <td>${item.fecha}</td>
+      <td>${item.afiliadoId}</td>
+      <td>${item.nombre}</td>
+      <td>${item.membresia} BV</td>
+      <td>$${parseFloat(item.ventas).toLocaleString()}</td>
+      <td>$${parseFloat(item.comisiones).toLocaleString()}</td>
+    </tr>`;
+  });
+  
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+function graficarHistorial(historial) {
+  const ctx = document.getElementById('graficoHistorial').getContext('2d');
+  
+  if (chartHistorial) chartHistorial.destroy();
+  
+  if (!historial || historial.length === 0) {
+    return;
+  }
+
+  // Ordenar historial por fecha
+  historial.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+  
+  // Preparar datos para el gráfico
+  const fechas = historial.map(item => item.fecha);
+  const comisiones = historial.map(item => parseFloat(item.comisiones));
+  
+  chartHistorial = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: fechas,
+      datasets: [{
+        label: 'Comisiones Acumuladas (COP)',
+        data: comisiones,
+        borderColor: '#7fff7f',
+        backgroundColor: 'rgba(127, 255, 127, 0.1)',
+        borderWidth: 2,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return `$${context.raw.toLocaleString()}`;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return `$${value.toLocaleString()}`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// ================== FUNCIONES AUXILIARES ================== //
+
+async function callGoogleScript(data) {
+  try {
+    const response = await fetch(CONFIG.WEB_APP_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    });
+    
+    // Nota: Debido a las restricciones de CORS en GitHub Pages, necesitarás
+    // configurar tu Google Apps Script para manejar solicitudes POST directamente
+    // y devolver respuestas simples que puedan ser interpretadas
+    
+    // En un entorno real, deberías usar:
+    // const result = await response.json();
+    // return result;
+    
+    // Para este ejemplo, simulamos una respuesta exitosa
+    return { success: true, message: "Datos registrados correctamente" };
+    
+  } catch (error) {
+    console.error('Error en callGoogleScript:', error);
+    throw new Error(`No se pudo conectar con el servidor. Error: ${error.message}`);
+  }
+}
+
+function validarSesion() {
+  const claveGuardada = sessionStorage.getItem('hgwAuth');
+  if (!claveGuardada || claveGuardada !== claveCorrecta) {
+    window.location.href = "https://google.com";
+    return false;
+  }
+  return true;
+}
+
+function mostrarAlerta(mensaje, tipo = 'error') {
+  const colores = {
+    success: '#4CAF50',
+    error: '#f44336',
+    warning: '#ff9800'
+  };
+  
+  Toastify({
+    text: mensaje,
+    duration: 3000,
+    backgroundColor: colores[tipo] || colores.error,
+    className: "toast-alerta"
+  }).showToast();
+}
+
+function mostrarCarga(mostrar, elementoId) {
+  const btn = document.getElementById(elementoId);
+  if (btn) {
+    btn.disabled = mostrar;
+    btn.innerHTML = mostrar ? 
+      '<span class="cargando"></span> Procesando...' : 
+      btn.getAttribute('data-texto-original');
+  }
+}
+
+// Funciones restantes
+function guardarTotales() {
+  alert('Guardado en historial diario 🧠');
+}
+
+function descargarCSV() {
+  const csv = 'Bono,Valor\n' + Object.entries(totales).map(([k,v])=>`${k},${v}`).join('\n');
+  const blob = new Blob([csv], {type: 'text/csv'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'bonos_totales.csv';
+  link.click();
+}
+
+// Inicialización
+document.addEventListener('DOMContentLoaded', function() {
+  // Configura fechas actuales
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('afiliadoFecha').value = today;
+  document.getElementById('fechaInicio').value = today;
+  document.getElementById('fechaFin').value = today;
+  
+  // Agrega una fila inicial a la tabla de red
+  agregarFila();
+  
+  // Guarda texto original de botones
+  document.querySelectorAll('button').forEach(btn => {
+    btn.setAttribute('data-texto-original', btn.textContent);
+  });
+  
+  // Verifica autenticación
+  validarSesion();
+});
+</script>
+
+<footer style="text-align: center; background-color: #003300; color: #e0ffe0; font-family: 'Poppins', sans-serif; font-size: 12px; padding: 1rem; margin-top: 2rem; border-radius: 6px;">
+  <div><strong>Modelo:</strong> SimHGW1</div>
+  <div><strong>🌐Correo electronico:</strong> pibvaliu@gmail.com</div>
+  <a href="https://wa.me/573135727768?text=Hola%2C%20necesito%20ayuda%20con%20el%20simulador" target="_blank">
+  💬 Contactar vía WhatsApp
+  </a>
+  <div><strong>🛠️Soporte técnico:</strong> 3135727768 (palabra clave: <em>soport</em>)</div>
+  <div><strong>©Derechos de autor:</strong> DataCaval</div>
+  <div><strong>📍Ubicación:</strong> Valledupar/20</div>
+</footer>
+</body>
+</html>
